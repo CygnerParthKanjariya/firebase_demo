@@ -1,8 +1,10 @@
-import 'package:demo/view/otp_page.dart';
-import 'package:demo/view/success_page.dart';
+
+import 'package:demo/view/login/success_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+
+import 'otp_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});

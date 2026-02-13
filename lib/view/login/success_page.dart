@@ -1,6 +1,7 @@
-import 'package:demo/view/my_home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import 'my_home_page.dart';
 
 class SuccessPage extends StatelessWidget {
   const SuccessPage({super.key});
@@ -22,6 +23,7 @@ class SuccessPage extends StatelessWidget {
                   (route) => false,
                 );
               },
+
               child: Text('Logout'),
             ),
           ],
