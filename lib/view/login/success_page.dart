@@ -11,29 +11,39 @@ class SuccessPage extends StatefulWidget {
 }
 
 class _SuccessPageState extends State<SuccessPage> {
-  final DatabaseReference dbref = FirebaseDatabase.instance.ref();
+  var userid = FirebaseAuth.instance.currentUser?.uid;
+  late DatabaseReference dbref;
   TextEditingController nameController = TextEditingController();
   TextEditingController ageController = TextEditingController();
   TextEditingController cityController = TextEditingController();
+  bool isChecked = false;
+
+  @override
+  void initState() {
+    dbref = FirebaseDatabase.instance.ref().child('users').child(userid!);
+    super.initState();
+  }
 
   Future<void> addUser() async {
-    await dbref.child('users').push().set({
+    await dbref.push().set({
       "name": nameController.text,
       "age": ageController.text,
       "city": cityController.text,
+      'status': "pending",
     });
   }
 
   Future<void> updateUser(String id) async {
-    await dbref.child('users').child(id).update({
+    await dbref.child(id).update({
       "name": nameController.text,
       "age": ageController.text,
       "city": cityController.text,
+      "status": isChecked ? 'complete' : 'pending',
     });
   }
 
   Future<void> userDelete(String id) async {
-    await dbref.child('users').child(id).remove();
+    await dbref.child(id).remove();
   }
 
   @override
@@ -56,7 +66,7 @@ class _SuccessPageState extends State<SuccessPage> {
         ],
       ),
       body: FutureBuilder(
-        future: dbref.child('users').get(),
+        future: dbref.get(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             var dataSnapshot = snapshot.data;
@@ -71,73 +81,107 @@ class _SuccessPageState extends State<SuccessPage> {
                 itemCount: dataList.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(dataList[index].value['name'] ?? 'No Name'),
-                    subtitle: Text(dataList[index].value['city'] ?? 'No City'),
+                    title: Text(dataList[index].value['name'] ?? "No Name"),
+                    subtitle: Text(dataList[index].value['city'] ?? "No City"),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Text(dataList[index].value["status"]),
                         IconButton(
                           onPressed: () {
-                            nameController.text = dataList[index].value['name'];
-                            ageController.text = dataList[index].value['age'];
-                            cityController.text = dataList[index].value['city'];
+                            isChecked =
+                                dataList[index].value["status"] == "complete";
+                            nameController.text =
+                                dataList[index].value['name'] ?? '';
+                            ageController.text =
+                                dataList[index].value['age'] ?? '';
+                            cityController.text =
+                                dataList[index].value['city'] ?? '';
                             showModalBottomSheet(
                               context: context,
                               builder: (context) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    spacing: 15,
-                                    children: [
-                                      TextField(
-                                        controller: nameController,
-                                        decoration: InputDecoration(
-                                          hintText: "Enter Your Name",
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              20,
+                                return StatefulBuilder(
+                                  builder:
+                                      (
+                                        BuildContext context,
+                                        void Function(void Function())
+                                        setStateModal,
+                                      ) => Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Column(
+                                          spacing: 15,
+                                          children: [
+                                            TextField(
+                                              controller: nameController,
+                                              decoration: InputDecoration(
+                                                hintText: "Enter Your Name",
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                              ),
                                             ),
-                                          ),
+                                            TextField(
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              controller: ageController,
+                                              decoration: InputDecoration(
+                                                hintText: "Enter Your Age",
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                              ),
+                                            ),
+                                            TextField(
+                                              controller: cityController,
+                                              decoration: InputDecoration(
+                                                hintText: "Enter Your City",
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text("Task Status:"),
+                                                Checkbox(
+                                                  value: isChecked,
+                                                  onChanged: (bool? value) {
+                                                    setStateModal(() {
+                                                      isChecked =
+                                                          value ?? false;
+                                                    });
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                if (nameController
+                                                        .text
+                                                        .isNotEmpty &&
+                                                    ageController
+                                                        .text
+                                                        .isNotEmpty &&
+                                                    cityController
+                                                        .text
+                                                        .isNotEmpty) {
+                                                  updateUser(
+                                                    dataList[index].key,
+                                                  );
+                                                  Navigator.pop(context);
+                                                  setState(() {});
+                                                }
+                                              },
+                                              child: Text("Update"),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      TextField(
-                                        keyboardType: TextInputType.number,
-                                        controller: ageController,
-                                        decoration: InputDecoration(
-                                          hintText: "Enter Your Age",
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      TextField(
-                                        controller: cityController,
-                                        decoration: InputDecoration(
-                                          hintText: "Enter Your City",
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          if (nameController.text.isNotEmpty &&
-                                              ageController.text.isNotEmpty &&
-                                              cityController.text.isNotEmpty) {
-                                            updateUser(dataList[index].key);
-                                            // addUser();
-                                            Navigator.pop(context);
-                                            setState(() {});
-                                          }
-                                        },
-                                        child: Text("Update"),
-                                      ),
-                                    ],
-                                  ),
                                 );
                               },
                             );
@@ -207,6 +251,7 @@ class _SuccessPageState extends State<SuccessPage> {
                         ),
                       ),
                     ),
+
                     ElevatedButton(
                       onPressed: () {
                         if (nameController.text.isNotEmpty &&
