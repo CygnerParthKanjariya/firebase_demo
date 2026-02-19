@@ -57,6 +57,7 @@ class DefaultFirebaseOptions {
     appId: '1:342845959716:android:58d2a8248e2c8ad863b2b1',
     messagingSenderId: '342845959716',
     projectId: 'todo-list-46155',
+    databaseURL: 'https://todo-list-46155-default-rtdb.firebaseio.com',
     storageBucket: 'todo-list-46155.firebasestorage.app',
   );
 

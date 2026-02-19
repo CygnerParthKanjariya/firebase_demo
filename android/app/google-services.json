@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "342845959716",
+    "firebase_url": "https://todo-list-46155-default-rtdb.firebaseio.com",
     "project_id": "todo-list-46155",
     "storage_bucket": "todo-list-46155.firebasestorage.app"
   },
@@ -14,11 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "342845959716-40kosvi1hh6hsvet56ji6nt1ptatdvc6.apps.googleusercontent.com",
+          "client_id": "342845959716-8e88k9hn0ledh21fkj47491kbgih60ri.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.demo",
-            "certificate_hash": "254dc66a0d240321bfc15576afd58e4b9eb0c5c5"
+            "certificate_hash": "c74ffa44679b445976b4c4ae665b1348b057ee19"
           }
         },
         {

@@ -1,16 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'my_home_page.dart';
+import '../login/login_page.dart';
 
-class SuccessPage extends StatefulWidget {
-  const SuccessPage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<SuccessPage> createState() => _SuccessPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _SuccessPageState extends State<SuccessPage> {
+class _HomePageState extends State<HomePage> {
   var userid = FirebaseAuth.instance.currentUser?.uid;
   late DatabaseReference dbref;
   TextEditingController nameController = TextEditingController();
@@ -57,7 +57,7 @@ class _SuccessPageState extends State<SuccessPage> {
               await auth.signOut();
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => MyHomePage()),
+                MaterialPageRoute(builder: (context) => LoginPage()),
                 (route) => false,
               );
             },

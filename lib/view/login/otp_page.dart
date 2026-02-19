@@ -1,8 +1,9 @@
 import 'dart:math';
 
-import 'package:demo/view/login/success_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import '../realtime_database/home_page.dart';
 
 class OtpPage extends StatefulWidget {
   String verificationId;
@@ -39,21 +40,23 @@ class _OtpPageState extends State<OtpPage> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  try{
-                    PhoneAuthCredential credential = await PhoneAuthProvider.credential(
-                      verificationId: widget.verificationId,
-                      smsCode: otpController.text.toString(),
+                  try {
+                    PhoneAuthCredential credential =
+                        await PhoneAuthProvider.credential(
+                          verificationId: widget.verificationId,
+                          smsCode: otpController.text.toString(),
+                        );
+                    FirebaseAuth.instance.signInWithCredential(credential).then(
+                      (value) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => HomePage()),
+                        );
+                      },
                     );
-                    FirebaseAuth.instance.signInWithCredential(credential).then((value) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SuccessPage())
-                      );
-                    });
-                  }
-                      catch(ex){
+                  } catch (ex) {
                     log(ex as num);
-                      }
+                  }
                 },
                 child: Text("Verify OTP"),
               ),

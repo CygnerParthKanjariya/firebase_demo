@@ -1,0 +1,207 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+class CloudChatPage extends StatefulWidget {
+  final String name;
+  final String email;
+  final String senderId;
+  final String receiverId;
+
+  const CloudChatPage({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.senderId,
+    required this.receiverId,
+  });
+
+  @override
+  State<CloudChatPage> createState() => _CloudChatPageState();
+}
+
+class _CloudChatPageState extends State<CloudChatPage> {
+  String chatRoomId = "";
+  CollectionReference chatCollection = FirebaseFirestore.instance.collection(
+    'chat',
+  );
+
+  TextEditingController messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    getChatId();
+  }
+
+  void chat() {
+    chatCollection.doc(chatRoomId).collection("messages").add({
+      "message": messageController.text,
+      "senderId": widget.senderId,
+      "time": DateTime.now(),
+    });
+  }
+
+  Future<void> getChatId() async {
+    final String id1 = '${widget.senderId}_${widget.receiverId}';
+    final String id2 = '${widget.receiverId}_${widget.senderId}';
+
+    final doc1 = await chatCollection.doc(id1).get();
+
+    if (doc1.exists) {
+      chatRoomId = id1;
+    } else {
+      final doc2 = await chatCollection.doc(id2).get();
+
+      if (doc2.exists) {
+        chatRoomId = id2;
+      } else {
+        await chatCollection.doc(id1).set({"chatId": id1});
+        chatRoomId = id1;
+      }
+    }
+
+    setState(() {});
+  }
+
+  void deleteMessage(String messageId) {
+    chatCollection
+        .doc(chatRoomId)
+        .collection("messages")
+        .doc(messageId)
+        .delete();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.name),
+        centerTitle: true,
+        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.delete))],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: chatRoomId.isNotEmpty
+                  ? StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: chatCollection
+                          .doc(chatRoomId)
+                          .collection("messages")
+                          .orderBy("time", descending: true)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var data = snapshot.data;
+                          return ListView.builder(
+                            reverse: true,
+                            itemCount: data?.docs.length,
+                            itemBuilder: (context, index) {
+                              var key = data!.docs[index].id;
+                              final timestamp = data.docs[index].data()["time"];
+
+                              String time = '';
+
+                              if (timestamp != null) {
+                                DateTime date = timestamp.toDate();
+                                time = DateFormat('hh:mm a').format(date);
+                              }
+
+                              return Row(
+                                mainAxisAlignment:
+                                    data.docs[index].data()['senderId'] ==
+                                        widget.senderId
+                                    ? MainAxisAlignment.end
+                                    : MainAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                            .7,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            data.docs[index]
+                                                    .data()['senderId'] ==
+                                                widget.senderId
+                                            ? Colors.blueGrey
+                                            : Colors.black12,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              data.docs[index]
+                                                  .data()["message"]
+                                                  .toString(),
+                                              style: TextStyle(fontSize: 20),
+                                            ),
+                                            Text(
+                                              time,
+                                              style: TextStyle(fontSize: 8),
+                                            ),
+                                            data.docs[index]
+                                                        .data()['senderId'] ==
+                                                    widget.senderId
+                                                ? IconButton(
+                                                    onPressed: () {
+                                                      deleteMessage(key);
+                                                    },
+                                                    icon: Icon(Icons.delete),
+                                                  )
+                                                : SizedBox.shrink(),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                        return Center(child: CircularProgressIndicator());
+                      },
+                    )
+                  : Center(child: CircularProgressIndicator()),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: messageController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[300],
+                      hintText: "Type message here",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    if (messageController.text.isNotEmpty) {
+                      chat();
+                      messageController.clear();
+                    }
+                  },
+                  icon: Icon(Icons.send),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
