@@ -64,21 +64,39 @@ class _CloudChatPageState extends State<CloudChatPage> {
     setState(() {});
   }
 
-  void deleteMessage(String messageId) {
-    chatCollection
+  Future<void> deleteMessage(String messageId) async {
+    await chatCollection
         .doc(chatRoomId)
         .collection("messages")
         .doc(messageId)
         .delete();
   }
 
+  Future<void> deleteAllChat() async {
+    await chatCollection.doc(chatRoomId).collection("messages").get().then((
+      snapshot,
+    ) {
+      for (var doc in snapshot.docs) {
+        doc.reference.delete();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.name),
+        title: Text(widget.email),
         centerTitle: true,
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.delete))],
+        actions: [
+          IconButton(
+            onPressed: () {
+              deleteAllChat();
+            },
+            icon: Icon(Icons.delete),
+            tooltip: "Delete Chat",
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(15),
@@ -136,26 +154,52 @@ class _CloudChatPageState extends State<CloudChatPage> {
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
-                                        child: Column(
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Text(
-                                              data.docs[index]
-                                                  .data()["message"]
-                                                  .toString(),
-                                              style: TextStyle(fontSize: 20),
-                                            ),
-                                            Text(
-                                              time,
-                                              style: TextStyle(fontSize: 8),
+                                            Column(
+                                              children: [
+                                                Text(
+                                                  data.docs[index]
+                                                      .data()["message"]
+                                                      .toString(),
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  time,
+                                                  style: TextStyle(fontSize: 8),
+                                                ),
+                                              ],
                                             ),
                                             data.docs[index]
-                                                        .data()['senderId'] ==
+                                                        .data()["senderId"] ==
                                                     widget.senderId
-                                                ? IconButton(
-                                                    onPressed: () {
-                                                      deleteMessage(key);
+                                                ? PopupMenuButton(
+                                                    itemBuilder: (context) {
+                                                      return [
+                                                        PopupMenuItem(
+                                                          value: 0,
+                                                          child: Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Icon(
+                                                                Icons.delete,
+                                                              ),
+                                                              Text("Delete"),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ];
                                                     },
-                                                    icon: Icon(Icons.delete),
+                                                    onSelected: (value) {
+                                                      if (value == 0) {
+                                                        deleteMessage(key);
+                                                      }
+                                                    },
                                                   )
                                                 : SizedBox.shrink(),
                                           ],
