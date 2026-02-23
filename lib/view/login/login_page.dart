@@ -1,9 +1,8 @@
 import 'package:demo/view/cloud_firestore/cloud_home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,6 +23,10 @@ class _LoginPageState extends State<LoginPage> {
           (route) => false,
         );
       }
+      FirebaseRemoteConfig.instance.onConfigUpdated.listen((event) async {
+        await FirebaseRemoteConfig.instance.fetchAndActivate();
+        setState(() {});
+      });
     });
     super.initState();
   }
@@ -33,7 +36,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("User Login"),centerTitle: true,),
+      appBar: AppBar(
+        title: Text(FirebaseRemoteConfig.instance.getString("msg")),
+        centerTitle: true,
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -70,7 +76,6 @@ class _LoginPageState extends State<LoginPage> {
               //   },
               //   child: Text("Verify Your Number"),
               // ),
-
               ElevatedButton(
                 onPressed: () async {
                   final FirebaseAuth auth = FirebaseAuth.instance;
@@ -93,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                     );
                   }
                 },
-                child: Text("Login With Google"),
+                child: Text(FirebaseRemoteConfig.instance.getString("btnText")),
               ),
             ],
           ),

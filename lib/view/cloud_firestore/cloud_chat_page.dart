@@ -28,6 +28,10 @@ class _CloudChatPageState extends State<CloudChatPage> {
 
   TextEditingController messageController = TextEditingController();
 
+  final FocusNode _focusNode = FocusNode();
+  bool isEditing = false;
+  String? editMessageId;
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +83,18 @@ class _CloudChatPageState extends State<CloudChatPage> {
       for (var doc in snapshot.docs) {
         doc.reference.delete();
       }
+    });
+  }
+
+  void showKeyboard() {
+    FocusScope.of(context).requestFocus(_focusNode);
+  }
+
+  void editMessage(String messageId) {
+    chatCollection.doc(chatRoomId).collection("messages").doc(messageId).set({
+      "message": messageController.text,
+      "senderId": widget.senderId,
+      "time": DateTime.now(),
     });
   }
 
@@ -193,11 +209,32 @@ class _CloudChatPageState extends State<CloudChatPage> {
                                                             ],
                                                           ),
                                                         ),
+                                                        PopupMenuItem(
+                                                          value: 1,
+                                                          child: Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Icon(Icons.edit),
+
+                                                              Text("Edit"),
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ];
                                                     },
                                                     onSelected: (value) {
                                                       if (value == 0) {
                                                         deleteMessage(key);
+                                                      } else {
+                                                        isEditing = true;
+                                                        messageController
+                                                            .text = data
+                                                            .docs[index]
+                                                            .data()["message"];
+                                                        showKeyboard();
+                                                        editMessageId = key;
                                                       }
                                                     },
                                                   )
@@ -221,6 +258,7 @@ class _CloudChatPageState extends State<CloudChatPage> {
               children: [
                 Expanded(
                   child: TextField(
+                    focusNode: _focusNode,
                     controller: messageController,
                     decoration: InputDecoration(
                       filled: true,
@@ -234,8 +272,15 @@ class _CloudChatPageState extends State<CloudChatPage> {
                 ),
                 IconButton(
                   onPressed: () {
-                    if (messageController.text.isNotEmpty) {
-                      chat();
+                    if (messageController.text.trim().isNotEmpty) {
+                      if (isEditing && editMessageId != null) {
+                        editMessage(editMessageId!);
+                        isEditing = false;
+                        editMessageId = null;
+                      } else {
+                        chat();
+                      }
+
                       messageController.clear();
                     }
                   },
