@@ -1,10 +1,11 @@
-import 'package:demo/core/service/notification_service.dart';
+import 'package:demo/core/service/notification/notification_service.dart';
 import 'package:demo/view/login/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-import 'core/service/remote_config_service.dart';
+import 'core/service/remote_confige/remote_config_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -18,6 +19,8 @@ void main() async {
   await NotificationService.init();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await RemoteConfigService.getValue();
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+  // FirebaseCrashlytics.instance.crash();
   runApp(const MyApp());
 }
 
